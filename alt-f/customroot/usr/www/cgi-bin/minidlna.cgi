@@ -6,19 +6,25 @@ check_cookie
 write_header "miniDLNA Setup"
 
 mktt rescan_tt "Forces a rescan of all shares on service start.<br>It can take a lot of time, use only if necessary."
+mktt rebuild_tt "Removes internal database and performs a rescan of all shares on service start."
 
 CONFF=/etc/minidlna.conf
 
 if test -e $CONFF; then
+	if ! grep -q '^#force_rebuild=' $CONFF; then
+		sed -i '/force_rescan/a \#force_rebuild=no' $CONFF
+	fi
 	friendly_name=$(awk -F= '/^friendly_name/{printf "%s", $2}' $CONFF)
 	enable_tivo=$(awk -F= '/^enable_tivo/{printf "%s", $2}' $CONFF)
 	strict_dlna=$(awk -F= '/^strict_dlna/{printf "%s", $2}' $CONFF)
 	presentation_url=$(awk -F= '/^presentation_url/{printf "%s", $2}' $CONFF)
 	force_rescan=$(awk -F= '/^#force_rescan/{printf "%s", $2}' $CONFF)
+	force_rebuild=$(awk -F= '/^#force_rebuild/{printf "%s", $2}' $CONFF)
 	MDLNA_DIR=$(awk -F= '/^media_dir/{printf "%s;", $2}' $CONFF)
 fi
 
 if test "$force_rescan" = "yes"; then RESCAN_CHK=checked; fi
+if test "$force_rebuild" = "yes"; then REBUILD_CHK=checked; fi
 if test "$enable_tivo" = "yes"; then TV_CHK=checked; fi
 if test "$strict_dlna" = "yes"; then STRICT_CHK=checked; fi
 if test -z "$friendly_name" -o "$friendly_name" = "miniDLNA"; then friendly_name="miniDLNA on $(hostname)"; fi
@@ -88,6 +94,7 @@ cat<<-EOF
 	</table><p><table>
 	<tr><td>Server Name</td><td><input type=text name=friendly_name value="$friendly_name"></td></tr>
 	<tr><td>Rescan shares</td><td><input type=checkbox $RESCAN_CHK=checked name=force_rescan value=yes $(ttip rescan_tt)></td></tr>
+	<tr><td>Rebuild database</td><td><input type=checkbox $REBUILD_CHK=checked name=force_rebuild value=yes $(ttip rebuild_tt)></td></tr>
 	<tr><td>Strict DLNA</td><td><input type=checkbox $STRICT_CHK name=strict_dlna value=yes></td></tr>
 	<tr><td>TiVo Support</td><td><input type=checkbox $TV_CHK name=enable_tivo value=yes></td></tr>
 	<tr><td>Xbox Support</td><td><input type=checkbox $XBOX_CHK name=enable_xbox value=yes></td></tr>

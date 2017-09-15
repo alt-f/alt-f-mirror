@@ -4,18 +4,18 @@
 #
 #############################################################
 
-MINIDLNA_VERSION = 1.1.5
+MINIDLNA_VERSION = 1.2.1
 MINIDLNA_SOURCE = minidlna-$(MINIDLNA_VERSION).tar.gz
 MINIDLNA_SITE = $(BR2_SOURCEFORGE_MIRROR)/project/minidlna/minidlna/$(MINIDLNA_VERSION)
 
 MINIDLNA_AUTORECONF = NO
 MINIDLNA_LIBTOOL_PATCH = NO
 
-MINIDLNA_DEPENDENCIES = uclibc libexif jpeg libid3tag flac libvorbis sqlite ffmpeg
+MINIDLNA_DEPENDENCIES = uclibc libexif jpeg libid3tag flac libvorbis sqlite ffmpeg avahi
 
 MINIDLNA_CONF_OPT = --enable-tivo \
 	--with-os-name=Alt-F \
-	--with-os-version=0.1RC4.1 \
+	--with-os-version=1.0 \
 	--with-os-url=https://sourceforge.net/projects/alt-f \
 	--program-prefix=""
 
