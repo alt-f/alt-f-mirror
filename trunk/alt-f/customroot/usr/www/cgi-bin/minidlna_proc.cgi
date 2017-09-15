@@ -35,6 +35,12 @@ else
 	force_rescan=no
 fi
 
+if test -n "$force_rebuild"; then
+	force_rebuild=yes
+else
+	force_rebuild=no
+fi
+
 if test -n "$enable_xbox"; then
 	sed -i 's/.*presentation_url=.*$/presentation_url=http:\/\/'"$(hostname -i | tr -d ' \t')"':'$port'/' $CONFF
 else
@@ -45,6 +51,7 @@ sed -i 's/.*friendly_name=.*$/friendly_name='"$(httpd -d $friendly_name)"'/' $CO
 sed -i 's/^enable_tivo=.*$/enable_tivo='$enable_tivo'/' $CONFF
 sed -i 's/^strict_dlna=.*$/strict_dlna='$strict_dlna'/' $CONFF
 sed -i 's/^#force_rescan=.*$/#force_rescan='$force_rescan'/' $CONFF
+sed -i 's/^#force_rebuild=.*$/#force_rebuild='$force_rebuild'/' $CONFF
 
 # save old, in case of errors
 sed -i 's/^media_dir=.*$/#!#&/' $CONFF
