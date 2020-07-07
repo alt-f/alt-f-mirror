@@ -54,11 +54,10 @@ $(SUDO_DIR)/.configured: $(SUDO_DIR)/.unpacked $(SUDO_CONFIG_FILE)
 		--without-umask \
 		--with-logging=syslog \
 		--without-interfaces \
-		--disable-authentication \
 		$(SUDO_EXTRA_CONFIG) \
 	)
 	touch $@
-
+		
 $(SUDO_DIR)/sudo: $(SUDO_DIR)/.configured
 	$(MAKE) -C $(SUDO_DIR)
 	touch -c $@
