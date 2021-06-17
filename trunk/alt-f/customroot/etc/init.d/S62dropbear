@@ -6,35 +6,27 @@ TYPE=net
 
 . /etc/init.d/common
 
+CONF_SETT=/etc/settings
 DB_DIR=/etc/dropbear
 OPTS=""
 
 sinit() {
-	# Make sure dropbear directory exists
-	if [ ! -d $DB_DIR ] ; then
-		mkdir -p $DB_DIR
-	fi
+	mkdir -p $DB_DIR
 
-	# Check for the Dropbear RSA key
-	if [ ! -f $DB_DIR/dropbear_rsa_host_key ] ; then
-		echo "$NAME: generating rsa key... "
-		/usr/bin/dropbearkey -t rsa -f $DB_DIR/dropbear_rsa_host_key >& /dev/null
+	# generate dropbear keys with default size
+	for i in dss rsa ecdsa ed25519; do
+		if ! test -e $DB_DIR/dropbear_${i}_host_key; then
+			echo "$NAME: generating $i key... "
+			dropbearkey -t $i -f $DB_DIR/dropbear_${i}_host_key >& /dev/null
+		fi
+	done
+	
+	if ! grep -q dropbear_ed25519_host_key $CONF_SETT; then
+		echo -e "$DB_DIR/dropbear_ed25519_host_key\n$CONF_SETT" >> $CONF_SETT
+		sort -u $CONF_SETT -o $CONF_SETT
 	fi
-
-	# Check for the Dropbear DSS key
-	if [ ! -f $DB_DIR/dropbear_dss_host_key ] ; then
-		echo "$NAME: generating dsa key... "
-		/usr/bin/dropbearkey -t dss -f $DB_DIR/dropbear_dss_host_key >& /dev/null
-	fi
-
-	# Check for the Dropbear ECDSA key
-	if [ ! -f $DB_DIR/dropbear_ecdsa_host_key ] ; then
-		echo "$NAME: generating ecdsa key... "
-		/usr/bin/dropbearkey -t ecdsa -s 384 -f $DB_DIR/dropbear_ecdsa_host_key >& /dev/null
-	fi
-
+		
 	umask 077
-	#if ! test -e /var/log/lastlog; then touch /var/log/lastlog; fi
 }
 
 if test "$1" = "init"; then
