@@ -1,3 +1,6 @@
 #!/bin/sh
 
-sed -i '/allow_writeable_chroot/d' /etc/vsftpd.conf
+sed -i "\|/usr/sbin/vsftp|d" /etc/inetd.conf
+rcinetd reload
+
+rm -f /sbin/rcvsftpd
