@@ -1,9 +1,10 @@
 Package: popt
 Description: A C library for parsing command line parameters.
 Version: 1.16-1
-Depends: ipkg
+Depends: ipkg, libiconv
 Architecture: arm
-Priority: optional
+Priority: required
 Section: libraries
 Source: https://ftp.openbsd.org/pub/OpenBSD/distfiles
 Maintainer: jcard
+Essential: yes
