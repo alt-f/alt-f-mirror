@@ -4,7 +4,7 @@
 #
 ###########################################################
 
-DROPBEAR_VERSION = 2019.78
+DROPBEAR_VERSION = 2020.81
 DROPBEAR_SOURCE = dropbear-$(DROPBEAR_VERSION).tar.bz2
 DROPBEAR_SITE = https://matt.ucc.asn.au/dropbear/releases
 DROPBEAR_DEPENDENCIES = uclibc zlib
