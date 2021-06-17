@@ -4,7 +4,7 @@
 #
 ############################################################
 
-VSFTPD_VERSION:=3.0.3
+VSFTPD_VERSION:=3.0.4
 VSFTPD_SOURCE:=vsftpd-$(VSFTPD_VERSION).tar.gz
 VSFTPD_SITE:=https://security.appspot.com/downloads
 VSFTPD_DIR:=$(BUILD_DIR)/vsftpd-$(VSFTPD_VERSION)
@@ -29,6 +29,7 @@ $(VSFTPD_DIR)/.unpacked: $(DL_DIR)/$(VSFTPD_SOURCE)
 	touch $@
 
 $(VSFTPD_DIR)/.configured: $(VSFTPD_DIR)/.unpacked
+	$(SED) 's,#define[[:space:]]*VSF_BUILD_PAM.*,#undef VSF_BUILD_PAM,g' $(VSFTPD_DIR)/builddefs.h
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 	$(SED) 's,#undef[[:space:]]*VSF_BUILD_SSL.*,#define VSF_BUILD_SSL,g' $(VSFTPD_DIR)/builddefs.h
 else
@@ -51,7 +52,6 @@ $(VSFTPD_DIR)/.built: $(VSFTPD_DIR)/.configured
 
 $(TARGET_DIR)/$(VSFTPD_TARGET_BINARY): $(VSFTPD_DIR)/.built
 	cp -dpf $(VSFTPD_DIR)/$(VSFTPD_BINARY) $@
-	$(INSTALL) -D -m 0755 package/vsftpd/vsftpd-init $(TARGET_DIR)/etc/init.d/S70vsftpd
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 vsftpd: uclibc openssl $(TARGET_DIR)/$(VSFTPD_TARGET_BINARY)

@@ -96,7 +96,7 @@ if test "$xferlog_enable" = "yes"; then
 fi
 
 ftp_inetd="checked"; ftp_server="";
-if grep -qE '(^ftp|^ftps)' $INETD_CONF; then
+if grep -qwE '(^ftp|^ftps)' $INETD_CONF; then
 	ftp_inetd=checked
 else
 	ftp_server=checked
