@@ -11,9 +11,6 @@
 ./usr/lib/libe2p.so
 ./usr/lib/libe2p.so.2
 ./usr/lib/libe2p.so.2.3
-./usr/lib/libss.so
-./usr/lib/libss.so.2
-./usr/lib/libss.so.2.0
 ./usr/lib/libuuid.so
 ./usr/lib/libuuid.so.1
 ./usr/lib/libuuid.so.1.2
@@ -34,11 +31,5 @@
 ./usr/sbin/mklost+found
 ./usr/sbin/resize2fs
 ./usr/sbin/tune2fs
-./usr/sbin/dumpe2fs
-./usr/sbin/filefrag
 ./usr/sbin/fsck
-./usr/sbin/uuidd
-./usr/sbin/e2undo
-./usr/sbin/e2freefrag
 ./usr/sbin/e2label
-./usr/sbin/findfs
