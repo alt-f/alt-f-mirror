@@ -22,8 +22,14 @@ if test "$submit" = "Submit"; then
 	for i in $(seq 1 $rsync_cnt); do
 		if test -z "$(eval echo \$ldir_$i)" -o -z "$(eval echo \$shname_$i)"; then continue; fi
 
-		httpd -d "$(eval echo -e [\$shname_$i])"; echo
-		t=$(httpd -d "$(eval echo comment = \$cmt_$i)"); echo -e "\t$t"
+		shname=$(httpd -d "$(eval echo \$shname_$i)"); echo [$shname]
+		cmt=$(eval echo \$cmt_$i)
+		if test -n "$cmt"; then
+			t=$(httpd -d "comment = $cmt");
+		else
+			t="comment = $shname module"
+		fi
+		echo -e "\t$t"
 		t=$(httpd -d "$(eval echo path = \$ldir_$i)"); echo -e "\t$t"
 
 		if test -n "$(eval echo \$avail_$i)"; then
