@@ -9,6 +9,7 @@ NEED_ALTF_DIR=1
 . /etc/init.d/common
 
 SSH_DIR=/etc/ssh
+SSHD_PRIV_DIR=/var/run/empty
 SSHD_LOG=/var/log/opensshd.log
 SSHD_OPTS="-E $SSHD_LOG"
 DB_DIR=/etc/dropbear
@@ -24,7 +25,7 @@ inetd_setup() {
 			ISSHP=ssh_alt
 			SSHP=2222
 		fi
-		echo -e "#$ISSHP\tstream\ttcp\tnowait\troot\t/usr/sbin/sshd\tsshd\t-i\t# OpenSSH SSH/SFTP server" >> $INETD_CONF
+		echo -e "$ISSHP\tstream\ttcp\tnowait\troot\t/usr/sbin/sshd\tsshd\t-i\t# OpenSSH SSH/SFTP server" >> $INETD_CONF
 		rcinetd reload
 
 		if ! grep -q '^Port[[:space:]]' $CONFS; then
@@ -33,26 +34,25 @@ inetd_setup() {
 	fi
 }
 
-keyconvert() {
-	dropbearconvert dropbear openssh $DB_DIR/dropbear_$1_host_key $SSH_DIR/ssh_host_$1_key >& /dev/null
-	if test "$1" = "dss"; then
-		mv $SSH_DIR/ssh_host_dss_key $SSH_DIR/ssh_host_dsa_key
+# convert host keys from dropbear to openssh format
+convert_keys() {
+	for i in dss rsa ecdsa ed25519; do
+		if ! test -e $SSH_DIR/ssh_host_${i}_key; then
+			dropbearconvert dropbear openssh $DB_DIR/dropbear_${i}_host_key $SSH_DIR/ssh_host_${i}_key >& /dev/null
+			ssh-keygen -y -f $SSH_DIR/ssh_host_${i}_key > $SSH_DIR/ssh_host_${i}_key.pub
+		fi
+	done
+	if ! test -e $SSH_DIR/ssh_host_dsa_key; then
+		ln -sf $SSH_DIR/ssh_host_dss_key $SSH_DIR/ssh_host_dsa_key
+		ln -sf $SSH_DIR/ssh_host_dss_key.pub $SSH_DIR/ssh_host_dsa_key.pub
 	fi
 }
-
+	
 sinit() {
+	mkdir -p $SSH_DIR $SSHD_PRIV_DIR
 	inetd_setup
 	rcdropbear init
-	mkdir -p $SSH_DIR
-	if ! test -f $SSH_DIR/ssh_host_rsa_key; then
-		keyconvert rsa
-		keyconvert dss
-		keyconvert ecdsa
-	fi
-	if ! test -f $SSH_DIR/ssh_host_ed25519_key; then
-		ssh-keygen -P "" -t ed25519 -f $SSH_DIR/ssh_host_ed25519_key >& /dev/null
-		rm -f $SSH_DIR/ssh_host_ed25519_key.pub
-	fi
+	convert_keys
 }
 
 if test "$1" = "init"; then
@@ -60,7 +60,7 @@ if test "$1" = "init"; then
 	exit
 fi
 
-if check_inetd ssh sshd || check_inetd ssh_alt sshd;then
+if check_inetd ssh sshd || check_inetd ssh_alt sshd; then
 	exit 2
 fi
 
