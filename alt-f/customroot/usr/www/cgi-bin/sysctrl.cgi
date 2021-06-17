@@ -11,6 +11,7 @@ mktt tt_1cmd "User script to execute before the box reboots. Read the online hel
 mktt tt_2cmd "User script to execute before the box powers-down. Read the online help"
 mktt tt_3cmd "User script to execute when pressing the back button. Read the online help"
 mktt fanoff_tt "The fan turns off at system temperatures lower than this value"
+mktt lofan_tt "The fan turns at low speed at system temperatures lower than this value<br> and at fast speed at higher temperatures"
 mktt hist_temp_tt "Temperature window around temperature change points"
 
 board=$(cat /tmp/board)
@@ -20,7 +21,7 @@ lo_fan=2000
 hi_fan=5000
 hi_temp=50
 fan_mode=0
-if echo "$board" | grep -qE 'DNS-32(0-Ax|0-Bx|0L-Ax|7L-Ax)'; then
+if echo "$board" | grep -qE 'DNS-32(0-Ax|0-Bx|0L-Ax|7L-Ax)|DNR-322L-Ax'; then
 	fan_mode=2
 fi
 hist_temp=1
@@ -37,15 +38,16 @@ front_button_command1=
 front_button_command2=
 back_button_command=
 
-if test -f $CONFF; then
-	. $CONFF
-fi
+if test -s $CONFF; then . $CONFF; fi
+if test -s $CONFM; then . $CONFM; fi
 
 if test "$recovery" = "1"; then
 	recovchk=checked
 fi
 
-if test "$mail" = "1"; then
+if test -z "$MAILTO"; then
+	mailchk=disabled
+elif test "$mail" = "1"; then
 	mailchk=checked
 fi
 
@@ -55,11 +57,6 @@ fi
 
 if ! test -x /usr/sbin/hddtemp; then
 	disksdis=disabled
-fi
-
-if test -e $CONFM; then
-	SENDTO=$(awk -F= '/^MAILTO/{print $2}' $CONFM)
-	if test -z "$SENDTO"; then NOMAILF=disabled; fi
 fi
 
 cat<<-EOF
@@ -116,9 +113,8 @@ case "$board" in
 	EOF
 	;;
 
-	DNS-320-[AB]x|DNS-320L-Ax|DNS-321-Ax|DNS-323-C1|DNS-325-Ax|DNS-327L-Ax)
+	DNR-322L-Ax|DNS-320-[AB]x|DNS-320L-Ax|DNS-321-Ax|DNS-323-C1|DNS-325-Ax|DNS-327L-Ax)
 
-	mktt lofan_tt "The fan turns at low speed at system temperatures lower than this value<br> and at fast speed at higher temperatures"
 	if test -z "$lo_temp"; then lo_temp=45; fi
 
 	fmode="<select name=fan_mode id=fanmode_id onChange=\"tdis()\">"
@@ -172,7 +168,7 @@ cat<<-EOF
 				<td><input type=checkbox $mailchk name=mail value="1"></td>
 				<td></td>
 				<td>Send mail to</td>
-				<td><input type=text readonly name=sendto value="$SENDTO">
+				<td><input type=text readonly name=sendto value="$MAILTO">
 				Use "Setup Mail" to change</td>
 			</tr>
 		</table></fieldset>

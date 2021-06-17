@@ -469,8 +469,8 @@ void smail(char *type, int fan, float temp, int limit) {
 		syslog(LOG_ERR, "error sending mail");
 		return;
 	}
-	fprintf(fo, "To: <%s>"
-		"From: <%s>"
+	fprintf(fo, "To: %s"
+		"From: %s"
 		"Subject: Alt-F System Control %s message\n\n"
 		"This is a %s message from %s\n"
 		"Fan speed=%d\nSystem Temperature=%.1f\nLimit Temperature=%d\n\n"

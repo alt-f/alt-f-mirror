@@ -8,6 +8,9 @@ umask 077
 
 . /etc/init.d/common
 
+# avoid devtmpfs to remove device node on reboot/powerdown
+touch /dev/event0
+
 case "$1" in
 	start) start $NAME ;;
 	stop)	stop $NAME ;;

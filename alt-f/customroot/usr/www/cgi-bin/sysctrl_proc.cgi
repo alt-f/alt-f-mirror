@@ -2,6 +2,7 @@
 
 . common.sh
 check_cookie
+mail=0
 read_args
 
 #debug
