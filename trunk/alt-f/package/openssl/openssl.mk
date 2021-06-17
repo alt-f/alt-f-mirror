@@ -4,9 +4,10 @@
 #
 ############################################################
 
-OPENSSL_VERSION:=1.0.2u
+OPENSSL_VERSION:=1.1.1k
 OPENSSL_SITE:=https://www.openssl.org/source
 
+# FIXME: is MAKE1 still needed on 1.1.1?
 OPENSSL_MAKE = $(MAKE1)
 
 # Some architectures are optimized in OpenSSL
@@ -25,15 +26,15 @@ OPENSSL_TARGET_ARCH=x86_64
 endif
 
 OPENSSL_INSTALL_STAGING = YES
-OPENSSL_INSTALL_STAGING_OPT = INSTALL_PREFIX=$(STAGING_DIR) install
-OPENSSL_INSTALL_TARGET_OPT = INSTALL_PREFIX=$(TARGET_DIR) install_sw
+OPENSSL_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) install_sw install_ssldirs
+OPENSSL_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install_sw install_ssldirs
+OPENSSL_HOST_INSTALL_OPT = install_sw install_ssldirs
 
-OPENSSL_DEPENDENCIES = zlib
+OPENSSL_DEPENDENCIES = zlib openssl-host
 
-OPENSSL_CONF_OPT = -DOPENSSL_SMALL_FOOTPRINT 
+OPENSSL_CONF_OPT = -DOPENSSL_SMALL_FOOTPRINT -DOPENSSL_NO_ASYNC
 ifeq ($(BR2_PACKAGE_CRYPTODEV),y)
 	OPENSSL_DEPENDENCIES += cryptodev
-	OPENSSL_CONF_OPT += -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS -DHASH_MAX_LEN=64
 endif
 
 OPENSSL_CFLAGS = $(TARGET_OPTIMIZATION) $(OPENSSL_CONF_OPT) $(BR2_PACKAGE_OPENSSL_OPTIM)
@@ -50,21 +51,22 @@ $(eval $(call AUTOTARGETS_HOST,package,openssl))
 # (cryptodev) cryptodev engine
 # 
 # /# openssl speed -evp aes-128-cbc
-# type                    16 bytes        64 bytes     256 bytes    1024 bytes        8192 bytes
-# aes-128-cbc       3462.90k      4104.75k      4306.43k       4356.28k       4205.59k (no mv_cesa)
-# aes-128-cbc       3675.66k    14573.71k    43141.69k   286182.40k   375778.74k (mv_cesa)
+# type              16 bytes     64 bytes     256 bytes    1024 bytes   8192 bytes
+# aes-128-cbc       3462.90k     4104.75k     4306.43k     4356.28k     4205.59k (no mv_cesa)
+# aes-128-cbc       3675.66k    14573.71k    43141.69k   286182.40k     375778.74k (mv_cesa)
 # 
 # / # openssl speed -evp sha1
 # sha1               575.41k     1823.25k     4580.09k     7323.65k     8909.83k (no mv_cesa)
 # sha1               541.06k     1754.84k     4469.86k     7254.65k     8866.47k (mv_cesa)
+
+#			--libdir=lib \
 			
 $(OPENSSL_HOST_CONFIGURE):
 	(cd $(OPENSSL_HOST_DIR); \
-		./config \
+		LDFLAGS=-L$(HOST_DIR)/usr/lib ./config \
 			--prefix=$(HOST_DIR)/usr \
-			--libdir=lib \
 			--openssldir=$(HOST_DIR)/usr/etc/ssl \
-			threads shared no-zlib; \
+			threads no-shared zlib-dynamic; \
 		$(MAKE) depend \
 	)
 	touch $@
@@ -76,13 +78,18 @@ $(OPENSSL_TARGET_CONFIGURE):
 		./Configure \
 			--prefix=/usr \
 			--openssldir=/etc/ssl \
-			threads shared \
-			no-idea no-md2 no-mdc2 no-rc5 no-camellia no-seed \
-			no-krb5 no-jpake no-store no-err \
- 			no-zlib no-comp no-ssl2 no-ssl3 \
 			$(OPENSSL_CONF_OPT) \
 			linux-$(OPENSSL_TARGET_ARCH) \
+			shared threads enable-devcryptoeng \
+			no-afalgeng no-hw-padlock no-egd \
+			no-tests no-fuzz-libfuzzer no-fuzz-afl no-capieng \
+			no-autoerrinit no-sse2 no-gost no-srp \
+			no-sm2 no-sm3 no-sm4 \
+			no-idea no-md2 no-mdc2 no-rc5 no-camellia no-seed \
+			no-err no-comp no-ssl2 no-ssl3 \
 	)
+	# no-engine no-dynamic-engine # no-ct no-ocsp
+	# look at no-dtls (TLS over UDP)
 	$(SED) "s/build_tests //" $(OPENSSL_DIR)/Makefile
 	touch $@
 
@@ -102,7 +109,10 @@ ifeq ($(BR2_PACKAGE_OPENSSL_BIN),y)
 else
 	rm -f $(TARGET_DIR)/usr/bin/openssl
 endif
-	rm -f $(TARGET_DIR)/usr/bin/c_rehash
+	rm -f $(TARGET_DIR)/usr/bin/c_rehash \
+		$(TARGET_DIR)/etc/ssl/openssl.cnf.dist \
+		$(TARGET_DIR)/etc/ssl/ct_log_list*
+	rm -rf $(TARGET_DIR)/etc/ssl/misc
 	# libraries gets installed read only, so strip fails
 	for i in $(addprefix $(TARGET_DIR)/usr/lib/,libcrypto.so.* libssl.so.*); \
 	do chmod +w $$i; $(STRIPCMD) $(STRIP_STRIP_UNNEEDED) $$i; done
@@ -112,6 +122,10 @@ else
 	chmod +w $(TARGET_DIR)/usr/lib/engines/lib*.so
 	$(STRIPCMD) $(STRIP_STRIP_UNNEEDED) $(TARGET_DIR)/usr/lib/engines/lib*.so
 endif
+	# FIXME: this takes too long, execute only if it does not exists.
+	mkdir -p $(TARGET_DIR)/etc/ssl/certs
+	if ! test -f $(TARGET_DIR)/etc/ssl/dhparam.pem; then \
+	openssl dhparam -out $(TARGET_DIR)/etc/ssl/dhparam.pem 2048; fi
 	touch $@
 
 $(OPENSSL_TARGET_UNINSTALL):
