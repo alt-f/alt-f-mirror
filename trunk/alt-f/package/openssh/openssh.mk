@@ -4,15 +4,16 @@
 #
 #############################################################
 
-#OPENSSH_VERSION=7.1p2
-OPENSSH_VERSION=8.1p1
+OPENSSH_VERSION=8.3p1
 
 OPENSSH_SITE=https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable
 
-OPENSSH_CONF_ENV = LD=$(TARGET_CC)
-OPENSSH_CONF_OPT = --sysconfdir=/etc/ssh --with-privsep-path=/var/run/vsftpd \
+OPENSSH_CONF_ENV = LD=$(TARGET_CC) CFLAGS="$(TARGET_CFLAGS) $(BR2_PACKAGE_OPENSSH_OPTIM)"
+
+OPENSSH_CONF_OPT = --sysconfdir=/etc/ssh \
 	--disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx \
-	--without-ssl-engine --without-pam --without-selinux --with-md5-passwords
+	--without-pam --without-selinux \
+	--with-md5-passwords --with-privsep-path=/var/run/empty 
 
 OPENSSH_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
 

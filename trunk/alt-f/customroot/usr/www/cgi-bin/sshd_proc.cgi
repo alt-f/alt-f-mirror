@@ -11,20 +11,19 @@ if test -n "$db_nopass"; then
 	opt1=no
 fi
 
+opt2=yes
+if test -n "$db_norootpass"; then
+	opt2=prohibit-password
+fi
+
 if test -n "$db_noroot"; then
-	if test -n "$db_norootpass"; then
-		opt2=without-password
-	else
-		opt2=no
-	fi
-else
-	opt2=yes
+	opt2=no
 fi
 
 sed -i "/\/usr\/sbin\/sshd/s|.*\(stream.*\)|#${srv}\t\1|" $CONF_INETD
 
-sed -i -e 's/^[# ]*PermitRootLogin.*/PermitRootLogin '$opt1'/' \
-	-e 's/^[# ]*PasswordAuthentication.*/PasswordAuthentication '$opt2'/' \
+sed -i -e 's/^[# ]*PermitRootLogin.*/PermitRootLogin '$opt2'/' \
+	-e 's/^[# ]*PasswordAuthentication.*/PasswordAuthentication '$opt1'/' \
 	-e 's/^[# ]*Port.*/Port '$sshd_port'/' \
 	$CONF2_SSHD
 

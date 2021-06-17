@@ -1,25 +1,5 @@
 #!/bin/sh 
 
-CONF=/etc/inetd.conf
-CONFS=/etc/ssh/sshd_config
-
-if ! grep -q /usr/sbin/sshd $CONF; then
-	if grep -q ssh_alt $CONF; then
-		ISSHP=ssh
-		SSHP=22
-	else
-		ISSHP=ssh_alt
-		SSHP=2222
-	fi
-	echo -e "$ISSHP\tstream\ttcp\tnowait\troot\t/usr/sbin/sshd\tsshd\t-i -E /var/log/opensshd.log\t# OpenSSH SSH/SFTP server" >> $CONF
-	rcinetd reload
-
-	if ! grep -q '^Port[[:space:]]' $CONFS; then
-		sed -i 's/#Port[[:space:]]*.*/Port '$SSHP'/' $CONFS
-	fi
-
-fi
-
 update-alternatives --install /usr/bin/scp scp /usr/bin/scp-openssh 20
 update-alternatives --install /usr/bin/ssh ssh /usr/bin/ssh-openssh 20
 

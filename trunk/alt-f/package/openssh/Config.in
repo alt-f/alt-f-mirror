@@ -13,3 +13,9 @@ config BR2_PACKAGE_OPENSSH_SFTP
 	depends on BR2_PACKAGE_OPENSSH
 	help
 	 Installs only the sftp-server
+	 
+config BR2_PACKAGE_OPENSSH_OPTIM
+string "sftp server optim"
+depends on BR2_PACKAGE_OPENSSH_SFTP
+help
+	Compile optimization options (-Os, -O2)
