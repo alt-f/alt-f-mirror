@@ -1,5 +1,6 @@
 config BR2_PACKAGE_WGET
 	bool "wget"
+	select BR2_PACKAGE_OPENSSL
 	help
 	  Network utility to retrieve files from http/ftp/etc...
 
