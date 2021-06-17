@@ -36,6 +36,7 @@ fi
 
 if test -n "$ddns" -a -n "$host"; then
 	host=$(httpd -d "$host")
+	if test -n "$user"; then user=$(httpd -d "$user")
 	llevel=3
 	if test "$verbose" = "yes"; then llevel=5; fi
 
