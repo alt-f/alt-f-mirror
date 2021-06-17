@@ -1,5 +1,6 @@
 config BR2_PACKAGE_RSYNC
 	bool "rsync"
+	select BR2_PACKAGE_popt
 	help
 	  File transfer program to keep remote files in sync.
 
