@@ -6,6 +6,12 @@ config BR2_PACKAGE_GPTFDISK
 	  The gdisk and sgdisk programs work on Globally Unique Identifier (GUID) Partition Table (GPT) disks
 	  http://www.rodsbooks.com/gdisk/
 
+config BR2_PACKAGE_GPTFDISK_OPTIM
+	string "gptfdisk optim"
+	depends on BR2_PACKAGE_GPTFDISK
+	help
+	  Compile optimization options (-Os, -O2)
+
 config BR2_PACKAGE_GPTFDISK_SGDISK
 	bool "sgdisk"
 	default y
