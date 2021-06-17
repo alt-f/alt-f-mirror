@@ -8,9 +8,10 @@ CONFF=/etc/msmtprc
 CONFM=/etc/misc.conf
 CONFA=/etc/msmtprc.alias
 
-if test -z "$tls"; then tls=off; fi
-#if test -z "$auth"; then auth=on; fi
+if test -z "$tls"; then tls="off"; fi
 
+if test -z "$starttls" -o "$tls" = "off"; then starttls="off"; fi
+ 
 if test -z "$to"; then
 	msg "\"To\" entry must be filled"
 fi
@@ -34,9 +35,9 @@ if test "$auth" != "off"; then
 	fi
 fi
 
-user=$(httpd -d "$user")
-to=$(httpd -d "$to")
-from=$(httpd -d "$from")
+user=$(eatspaces $(httpd -d "$user"))
+to=$(eatspaces $(httpd -d "$to"))
+from=$(eatspaces $(httpd -d "$from"))
 
 if echo $from | grep -q '.*<.*>'; then
 	from=$(echo $from | sed -n "s/.*<\(.*\)>.*/\1/p")
@@ -48,14 +49,16 @@ fi
 
 #debug
 
-echo "
-tls_trust_file	/etc/ssl/ca-bundle.crt
-syslog		on
-host	$host
-tls		$tls
-auth	$auth
-from	$from
-aliases	$CONFA" > $CONFF
+cat <<-EOF > $CONFF
+	tls_trust_file	/etc/ssl/ca-bundle.crt
+	syslog	on
+	host	$host
+	tls	$tls
+	tls_starttls	$starttls
+	auth	$auth
+	from	$from
+	aliases	$CONFA
+EOF
 
 sed -i '/^MAILTO=/d' $CONFM
 echo "MAILTO=$to" >> $CONFM
@@ -78,7 +81,7 @@ if test "$submit" = "Test"; then
 		This is an Alt-F test message
 	EOF
 	if test $? = 0; then
-		msg "Mail sent."
+		msg "Mail sent. Verify $to inbox for delivery."
 	else
 		msg "Sent mail failed: $(logread | grep msmtp | tail -1)"
 	fi
